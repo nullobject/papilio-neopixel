@@ -1,18 +1,13 @@
 BUILD_DIR = build
 PROJECT   = neopixel
-
-PART = xc6slx9-2-tqg144
-
-BOARD   = PAPILIO_PRO
-SIZE    = 16384
-DEFINES = "-DBOARD_ID=0xA4041700 -DBOARD_MEMORYSIZE=0x800000 -DZPUINO_HAS_ICACHE"
+PART      = xc6slx9-2-tqg144
 
 all: $(BUILD_DIR)/$(PROJECT).bin
 
 $(BUILD_DIR):
 	mkdir -p $@
 
-$(BUILD_DIR)/$(PROJECT).ngc: neopixel.vhd ws2812.vhd $(PROJECT).vhd $(PROJECT).prj | $(BUILD_DIR)
+$(BUILD_DIR)/$(PROJECT).ngc: control.vhd dual_port_async_ram.vhd ws2812.vhd $(PROJECT).vhd $(PROJECT).prj | $(BUILD_DIR)
 	@cd $(BUILD_DIR); \
 	echo "run -ifn ../$(PROJECT).prj -ifmt mixed -ofn $(PROJECT) -ofmt NGC -p $(PART) -top $(PROJECT) -opt_mode Speed -opt_level 1" | xst
 
@@ -39,7 +34,7 @@ $(BUILD_DIR)/$(PROJECT).bin: $(BUILD_DIR)/$(PROJECT).bit
 	promgen -w -spi -p bin -o ${PROJECT}.bin -s 1024 -u 0 ${PROJECT}.bit
 
 clean:
-	rm -rf $(BUILD_DIR) neopixel.vhd neopixel.log
+	rm -rf $(BUILD_DIR) control.vhd
 
 program: $(BUILD_DIR)/$(PROJECT).bit
 	papilio-prog -s p -f $(BUILD_DIR)/$(PROJECT).bit
