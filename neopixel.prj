@@ -1,2 +1,3 @@
+vhdl work dual_port_async_ram.vhd
 vhdl work ws2812.vhd
 vhdl work neopixel.vhd
