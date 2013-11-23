@@ -12,15 +12,15 @@ entity neopixel is
 end neopixel;
 
 architecture neopixel_arch of neopixel is
-  constant ADDR_WIDTH : integer := 5;
+  constant ADDR_WIDTH : integer := 8;
   constant DATA_WIDTH : integer := 8;
 
   signal ram_we      : std_logic;
-  signal ram_addr_a  : unsigned(ADDR_WIDTH-1 downto 0);
-  signal ram_addr_b  : unsigned(ADDR_WIDTH-1 downto 0);
-  signal ram_din_a   : unsigned(DATA_WIDTH-1 downto 0);
-  signal ram_dout_a  : unsigned(DATA_WIDTH-1 downto 0);
-  signal ram_dout_b  : unsigned(DATA_WIDTH-1 downto 0);
+  signal ram_addr_a  : std_logic_vector(ADDR_WIDTH-1 downto 0);
+  signal ram_addr_b  : std_logic_vector(ADDR_WIDTH-1 downto 0);
+  signal ram_din_a   : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal ram_dout_a  : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal ram_dout_b  : std_logic_vector(DATA_WIDTH-1 downto 0);
 
   signal led_address : unsigned(ADDR_WIDTH-1 downto 0);
   signal led_data    : unsigned(DATA_WIDTH-1 downto 0);
@@ -39,9 +39,16 @@ architecture neopixel_arch of neopixel is
   signal  interrupt_ack : std_logic;
   signal   kcpsm6_sleep : std_logic;
   signal   kcpsm6_reset : std_logic;
+
+  signal demux_en: std_logic;
+  signal demux_din: std_logic_vector(ADDR_WIDTH-1 downto 0);
+  signal demux_dout: std_logic_vector((ADDR_WIDTH*2-1) downto 0);
+  signal demux_ready: std_logic;
 begin
   ram: entity work.dual_port_async_ram(dual_port_async_ram_arch)
-    generic map (ADDR_WIDTH => ADDR_WIDTH)
+    generic map (ADDR_WIDTH => ADDR_WIDTH,
+                 DATA_WIDTH => DATA_WIDTH
+                )
     port map (clk    => clk,
               we     => ram_we,
               addr_a => ram_addr_a,
@@ -89,33 +96,39 @@ begin
              rdl         => kcpsm6_reset,
              clk         => clk);
 
-  -- Reads the data requested by the LED driver at the LED address.
-  read_led_data: process(clk, led_address, ram_dout_b)
+  demuxer: entity work.phased_demuxer(phased_demuxer_architecture)
+    generic map (DATA_WIDTH => DATA_WIDTH)
+
+    port map (clk   => clk,
+              en    => write_strobe,
+              din   => demux_din,
+              dout  => demux_dout,
+              ready => demux_ready);
+
+  -- Writes data from the processor output ports to the two-phase demuxer.
+  demux_processor_output: process(clk, write_strobe, port_id, out_port)
   begin
     if rising_edge(clk) then
-      ram_addr_b <= led_address;
-      led_data <= ram_dout_b;
-    end if;
-  end process;
-
-  -- Writes the LED output from the LED driver.
-  write_led_output: process(clk, led_output)
-  begin
-    if rising_edge(clk) then
-      a(0) <= led_output;
-    end if;
-  end process;
-
-  -- Writes data from the processor output ports to the RAM.
-  processor_output_ports: process(clk)
-  begin
-    if rising_edge(clk) then
-      ram_we <= write_strobe;
-
       if port_id(0) = '1' then
-        ram_addr_a <= to_unsigned(0, ram_addr_a'length);
-        ram_din_a <= unsigned(out_port);
+        demux_din <= out_port;
       end if;
     end if;
   end process;
+
+  -- Enable the demuxer when the processor writes to the output port.
+  demux_en <= write_strobe;
+
+  -- Enable the RAM when the demuxer has data available.
+  ram_we <= demux_ready;
+
+  -- Read the data requested by the LED driver at the LED address.
+  ram_addr_b <= std_logic_vector(led_address);
+  led_data <= unsigned(ram_dout_b);
+
+  -- Write the demuxed data to RAM.
+  ram_addr_a <= demux_dout(15 downto 8);
+  ram_din_a <= demux_dout(7 downto 0);
+
+  -- Write the LED driver output to the pin.
+  a(0) <= led_output;
 end neopixel_arch;

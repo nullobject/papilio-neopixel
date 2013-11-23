@@ -1,14 +1,32 @@
-CONSTANT Port_A, 01
-CONSTANT LED, 0f
+CONSTANT PORT_A, 01
+CONSTANT LED_BRIGHTNESS, 80
+CONSTANT NUM_LEDS, 10
 CONSTANT delay_1us_constant, 07 ; 32Mhz clock on Papilio Pro
 
-LOAD s5, 00
-
-loop:
+start_wipe:
+  LOAD s5, 0
+  LOAD s6, LED_BRIGHTNESS
+  LOAD s7, NUM_LEDS
+wipe:
+  OUTPUT s5, PORT_A
+  OUTPUT s6, PORT_A
   CALL delay_20ms
-  XOR s5, LED
-  OUTPUT s5, Port_A
-  JUMP loop
+  ADD s5, 04
+  SUB s7, 01
+  JUMP NZ, wipe
+
+start_clear:
+  LOAD s5, 0
+  LOAD s6, 0
+  LOAD s7, NUM_LEDS
+clear:
+  OUTPUT s5, PORT_A
+  OUTPUT s6, PORT_A
+  CALL delay_20ms
+  ADD s5, 04
+  SUB s7, 01
+  JUMP NZ, clear
+  JUMP start_wipe
 
             ;Delay of 1us.
             ;
