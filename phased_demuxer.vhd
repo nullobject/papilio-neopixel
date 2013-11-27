@@ -23,17 +23,18 @@ architecture phased_demuxer_architecture of phased_demuxer is
 begin
   process(en, din, data, phase)
   begin
-    if rising_edge(clk) then
-      if en = '1' then
-        if phase = '0' then
-          data(0) <= din;
-        else
-          data(1) <= din;
-        end if;
-
-        ready <= phase;
-        phase <= not phase;
+    if rising_edge(clk) and en = '1' then
+      if phase = '0' then
+        data(0) <= din;
+      else
+        data(1) <= din;
       end if;
+
+      -- Set the ready output to the current phase.
+      ready <= phase;
+
+      -- Invert the phase.
+      phase <= not phase;
     end if;
   end process;
 

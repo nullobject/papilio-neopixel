@@ -25,10 +25,8 @@ architecture dual_port_async_ram_arch of dual_port_async_ram is
 begin
   process(clk, we, addr_a, din_a)
   begin
-    if rising_edge(clk) then
-      if we = '1' then
-        ram(to_integer(unsigned(addr_a))) <= din_a;
-      end if;
+    if rising_edge(clk) and we = '1' then
+      ram(to_integer(unsigned(addr_a))) <= din_a;
     end if;
   end process;
 
