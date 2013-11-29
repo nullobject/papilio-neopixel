@@ -19,7 +19,6 @@ architecture neopixel_arch of neopixel is
   signal ram_addr_a  : std_logic_vector(ADDR_WIDTH-1 downto 0);
   signal ram_addr_b  : std_logic_vector(ADDR_WIDTH-1 downto 0);
   signal ram_din_a   : std_logic_vector(DATA_WIDTH-1 downto 0);
-  signal ram_dout_a  : std_logic_vector(DATA_WIDTH-1 downto 0);
   signal ram_dout_b  : std_logic_vector(DATA_WIDTH-1 downto 0);
 
   signal led_address : unsigned(ADDR_WIDTH-1 downto 0);
@@ -45,7 +44,7 @@ architecture neopixel_arch of neopixel is
   signal demux_dout: std_logic_vector((ADDR_WIDTH*2-1) downto 0);
   signal demux_ready: std_logic;
 begin
-  ram: entity work.dual_port_async_ram(dual_port_async_ram_arch)
+  ram: entity work.dual_port_ram(dual_port_ram_architecture)
     generic map (ADDR_WIDTH => ADDR_WIDTH,
                  DATA_WIDTH => DATA_WIDTH
                 )
@@ -54,7 +53,6 @@ begin
               addr_a => ram_addr_a,
               addr_b => ram_addr_b,
               din_a  => ram_din_a,
-              dout_a => ram_dout_a,
               dout_b => ram_dout_b);
 
   led_driver: ws2812_LED_chain_driver
@@ -121,13 +119,13 @@ begin
   -- Enable the RAM when the demuxer has data available.
   ram_we <= demux_ready;
 
-  -- Read the data requested by the LED driver at the LED address.
-  ram_addr_b <= std_logic_vector(led_address);
-  led_data <= unsigned(ram_dout_b);
-
   -- Write the demuxed data to RAM.
   ram_addr_a <= demux_dout(15 downto 8);
   ram_din_a <= demux_dout(7 downto 0);
+
+  -- Read the data requested by the LED driver at the LED address.
+  ram_addr_b <= std_logic_vector(led_address);
+  led_data <= unsigned(ram_dout_b);
 
   -- Write the LED driver output to the pin.
   a(0) <= led_output;

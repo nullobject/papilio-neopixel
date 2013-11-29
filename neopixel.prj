@@ -1,5 +1,5 @@
 vhdl work control.vhd
-vhdl work dual_port_async_ram.vhd
+vhdl work dual_port_ram.vhd
 vhdl work kcpsm6.vhd
 vhdl work neopixel.vhd
 vhdl work phased_demuxer.vhd
