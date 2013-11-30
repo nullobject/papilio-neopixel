@@ -7,6 +7,9 @@ all: $(BUILD_DIR)/$(PROJECT).bin
 $(BUILD_DIR):
 	mkdir -p $@
 
+control.vhd: control.psm
+	pbasm --template=ROM_form.vhd control.psm
+
 $(BUILD_DIR)/$(PROJECT).ngc: control.vhd dual_port_ram.vhd phased_demuxer.vhd ws2812.vhd $(PROJECT).vhd $(PROJECT).prj | $(BUILD_DIR)
 	@cd $(BUILD_DIR); \
 	echo "run -ifn ../$(PROJECT).prj -ifmt mixed -ofn $(PROJECT) -ofmt NGC -p $(PART) -top $(PROJECT) -opt_mode Speed -opt_level 1" | xst
