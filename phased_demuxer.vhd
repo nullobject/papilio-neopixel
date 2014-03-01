@@ -2,6 +2,8 @@ library ieee;
 
 use ieee.std_logic_1164.all;
 
+-- The phased demuxer converts two sequential data values of width n to one
+-- data value of width 2n.
 entity phased_demuxer is
   generic (
     DATA_WIDTH : natural := 8
@@ -24,6 +26,7 @@ begin
     variable phase : std_logic;
   begin
     if rising_edge(clk) and en = '1' then
+      -- Store the data value for the phase.
       if phase = '0' then
         data(0) <= din;
       else
