@@ -1,6 +1,14 @@
-# Papilio Neopixel
+# Papilio NeoPixel
 
-This circuit implements controller for a [NeoPixel](http://learn.adafruit.com/adafruit-neopixel-uberguide) LED.
+This circuit implements a PicoBlaze microcontroller which controls a
+[NeoPixel](http://learn.adafruit.com/adafruit-neopixel-uberguide) LED.
+
+Address and value data is clocked out from the PicoBlaze microcontroller (U1)
+into the 2-phase data demultiplexer (U2) and stored in the dual-port RAM (U3).
+The WS2812 driver (U4) continually refreshes the NeoPixel LED data from RAM.
+
+![Schematic](/images/schematic.png)
+
 
 ## References
 
